@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import ResultsPage from './pages/ResultsPage';
-import { searchFlights } from './services/flightService';
-import type { TicketInfo } from './components/ticketresultcard/TicketResultCard';
-import './App.css';
+import { useState } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import ResultsPage from "./pages/ResultsPage";
+import { searchFlights } from "./services/flightService";
+import type { TicketInfo } from "./components/ticketresultcard/TicketResultCard";
+import "./App.css";
 
 function App() {
   const [loading, setLoading] = useState(false);
@@ -12,32 +12,39 @@ function App() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [lastSearchParams, setLastSearchParams] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSearch = async (params: any) => {
-    console.log('Searching...', params);
     setLoading(true);
     setPage(1);
     setLastSearchParams(params);
+    setError(null);
     try {
       const result = await searchFlights({ ...params, page: 1 });
-      // If result.tickets is an array of raw backend objects:
-      const tickets = (result.tickets || []).map((ticket: any) => ({
-        airline: ticket.airlineName || ticket.airline || '',
+      console.log("API Response:", result);
+      const tickets = (result.data || []).map((ticket: any) => ({
+        airline: ticket.airlineName || ticket.airline || "",
         price: ticket.price,
         departure: ticket.departureTime,
         arrival: ticket.arrivalTime,
         duration: ticket.duration,
+        stops: ticket.stops,
       }));
+      console.log("Mapped tickets:", tickets);
       setTickets(tickets);
-      setTotalPages(result.totalPages || 1);
-      console.log('Navigating to results');
-      navigate('/results');
-    } catch (error) {
+      setTotalPages(result.pagination?.totalPages || 1);
+      setError(null);
+    } catch (error: any) {
       setTickets([]);
       setTotalPages(1);
+      setError(
+        error?.response?.data?.message ||
+          "An error occurred while searching for flights."
+      );
     } finally {
       setLoading(false);
+      navigate("/results");
     }
   };
 
@@ -46,16 +53,20 @@ function App() {
     setLoading(true);
     setPage(newPage);
     try {
-      const result = await searchFlights({ ...lastSearchParams, page: newPage });
-      const tickets = (result.tickets || []).map((ticket: any) => ({
-        airline: ticket.airlineName || ticket.airline || '',
+      const result = await searchFlights({
+        ...lastSearchParams,
+        page: newPage,
+      });
+      const tickets = (result.data || []).map((ticket: any) => ({
+        airline: ticket.airlineName || ticket.airline || "",
         price: ticket.price,
         departure: ticket.departureTime,
         arrival: ticket.arrivalTime,
         duration: ticket.duration,
+        stops: ticket.stops,
       }));
       setTickets(tickets);
-      setTotalPages(result.totalPages || 1);
+      setTotalPages(result.pagination?.totalPages || 1);
     } catch (error) {
       setTickets([]);
       setTotalPages(1);
@@ -67,7 +78,19 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage onSearch={handleSearch} />} />
-      <Route path="/results" element={<ResultsPage loading={loading} tickets={tickets} page={page} totalPages={totalPages} onPageChange={handlePageChange} />} />
+      <Route
+        path="/results"
+        element={
+          <ResultsPage
+            loading={loading}
+            tickets={tickets}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            error={error}
+          />
+        }
+      />
     </Routes>
   );
 }
