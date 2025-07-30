@@ -9,6 +9,7 @@ interface ResultsPageProps {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  onBookTicket: (ticket: any) => void;
   error?: string | null;
 }
 
@@ -18,6 +19,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({
   page,
   totalPages,
   onPageChange,
+  onBookTicket,
   error,
 }) => {
   return (
@@ -45,7 +47,11 @@ const ResultsPage: React.FC<ResultsPageProps> = ({
           ) : null}
           {!error &&
             tickets.map((ticket, idx) => (
-              <TicketResultCard key={idx} ticket={ticket} />
+              <TicketResultCard
+                key={idx}
+                ticket={ticket}
+                onBookTicket={onBookTicket}
+              />
             ))}
           <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
             <Button

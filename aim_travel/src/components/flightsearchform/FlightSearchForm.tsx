@@ -4,7 +4,6 @@ import {
   Button,
   Checkbox,
   FormControlLabel,
-  Grid,
   Typography,
   Select,
   MenuItem,
@@ -72,8 +71,8 @@ const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ onSearch }) => {
             Book Your Flight
           </Typography>
           {/* Row 1: Origin -> Arrow -> Destination -> Round Trip */}
-          <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
-            <Grid item xs={4}>
+          <Box sx={{ display: "flex", gap: 2, mb: 3, alignItems: "center" }}>
+            <Box sx={{ flex: 1 }}>
               <TextField
                 value={origin}
                 onChange={(e) => setOrigin(e.target.value)}
@@ -88,8 +87,8 @@ const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ onSearch }) => {
                   ),
                 }}
               />
-            </Grid>
-            <Grid item xs={4}>
+            </Box>
+            <Box sx={{ flex: 1 }}>
               <TextField
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
@@ -104,10 +103,8 @@ const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ onSearch }) => {
                   ),
                 }}
               />
-            </Grid>
-            <Grid
-              item
-              xs={2}
+            </Box>
+            <Box
               sx={{
                 display: "flex",
                 justifyContent: "flex-end",
@@ -125,34 +122,36 @@ const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ onSearch }) => {
                 label="Round Trip"
                 sx={{ ml: 1 }}
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           {/* Row 2: Departure, (Return), Passengers */}
-          <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
-            <Grid item xs={roundTrip ? 4 : 6}>
+          <Box sx={{ display: "flex", gap: 2, mb: 3, alignItems: "center" }}>
+            <Box sx={{ flex: roundTrip ? 1 : 2 }}>
               <DatePicker
                 label="Departure Date"
                 value={departureDate}
+                minDate={new Date()}
                 onChange={setDepartureDate}
-                renderInput={(params: any) => (
-                  <TextField {...params} fullWidth required />
-                )}
+                slotProps={{
+                  textField: { fullWidth: true, required: true },
+                }}
               />
-            </Grid>
+            </Box>
             {roundTrip && (
-              <Grid item xs={4}>
+              <Box sx={{ flex: 1 }}>
                 <DatePicker
                   label="Return Date"
                   value={returnDate}
                   onChange={setReturnDate}
-                  renderInput={(params: any) => (
-                    <TextField {...params} fullWidth required={roundTrip} />
-                  )}
+                  minDate={departureDate ?? undefined}
+                  slotProps={{
+                    textField: { fullWidth: true, required: roundTrip },
+                  }}
                 />
-              </Grid>
+              </Box>
             )}
-            <Grid item xs={roundTrip ? 4 : 6}>
+            <Box sx={{ flex: roundTrip ? 1 : 2 }}>
               <FormControl fullWidth>
                 <InputLabel id="passenger-label">
                   <PersonIcon />
@@ -170,8 +169,8 @@ const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ onSearch }) => {
                   ))}
                 </Select>
               </FormControl>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           {/* Search Button */}
           <Button

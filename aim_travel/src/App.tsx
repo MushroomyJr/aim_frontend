@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import ResultsPage from "./pages/ResultsPage";
+import OrderForm from "./components/orderform/OrderForm";
+import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import { searchFlights } from "./services/flightService";
 import type { TicketInfo } from "./components/ticketresultcard/TicketResultCard";
 import "./App.css";
@@ -13,6 +15,8 @@ function App() {
   const [totalPages, setTotalPages] = useState(1);
   const [lastSearchParams, setLastSearchParams] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSearch = async (params: any) => {
@@ -75,6 +79,22 @@ function App() {
     }
   };
 
+  const handleBookTicket = (ticket: any) => {
+    setSelectedTicket(ticket);
+    navigate("/order");
+  };
+
+  const handleOrderComplete = (newOrderId: string) => {
+    setOrderId(newOrderId);
+    navigate("/confirmation");
+  };
+
+  const handleBackToSearch = () => {
+    setSelectedTicket(null);
+    setOrderId(null);
+    navigate("/");
+  };
+
   return (
     <Routes>
       <Route path="/" element={<HomePage onSearch={handleSearch} />} />
@@ -87,8 +107,36 @@ function App() {
             page={page}
             totalPages={totalPages}
             onPageChange={handlePageChange}
+            onBookTicket={handleBookTicket}
             error={error}
           />
+        }
+      />
+      <Route
+        path="/order"
+        element={
+          selectedTicket ? (
+            <OrderForm
+              ticket={selectedTicket}
+              onOrderComplete={handleOrderComplete}
+              onBack={() => navigate("/results")}
+            />
+          ) : (
+            <div>Redirecting...</div>
+          )
+        }
+      />
+      <Route
+        path="/confirmation"
+        element={
+          orderId ? (
+            <OrderConfirmationPage
+              orderId={orderId}
+              onBackToSearch={handleBackToSearch}
+            />
+          ) : (
+            <div>Redirecting...</div>
+          )
         }
       />
     </Routes>

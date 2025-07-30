@@ -67,7 +67,15 @@ function calculateDuration(departure: number[], arrival: number[]): string {
   return `${diffHours}h ${diffMinutes}m`;
 }
 
-const TicketResultCard: React.FC<{ ticket: any }> = ({ ticket }) => {
+interface TicketResultCardProps {
+  ticket: any;
+  onBookTicket: (ticket: any) => void;
+}
+
+const TicketResultCard: React.FC<TicketResultCardProps> = ({
+  ticket,
+  onBookTicket,
+}) => {
   return (
     <Card
       sx={{ mb: 2, borderRadius: 3, boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}
@@ -126,7 +134,12 @@ const TicketResultCard: React.FC<{ ticket: any }> = ({ ticket }) => {
             >
               ${ticket.price}
             </Typography>
-            <Button variant="contained" color="primary" size="small">
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => onBookTicket(ticket)}
+            >
               Book
             </Button>
           </Box>
