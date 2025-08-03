@@ -95,6 +95,26 @@ export async function createOrder(
   }
 }
 
+// Create order with Stripe payment
+export async function createOrderWithStripe(
+  orderData: OrderRequest,
+  stripeSessionId: string
+): Promise<OrderResponse> {
+  try {
+    const response = await axios.post(
+      "http://localhost:8080/api/v1/orders/stripe",
+      {
+        ...orderData,
+        stripeSessionId,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error creating order with Stripe:", error);
+    throw error;
+  }
+}
+
 export async function getOrder(orderId: string): Promise<OrderResponse> {
   try {
     const response = await axios.get(

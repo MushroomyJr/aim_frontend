@@ -4,6 +4,8 @@ import HomePage from "./pages/HomePage";
 import ResultsPage from "./pages/ResultsPage";
 import OrderForm from "./components/orderform/OrderForm";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import StripeDemo from "./components/stripecheckout/StripeDemo";
 import { searchFlights } from "./services/flightService";
 import type { TicketInfo } from "./components/ticketresultcard/TicketResultCard";
 import "./App.css";
@@ -27,14 +29,19 @@ function App() {
     try {
       const result = await searchFlights({ ...params, page: 1 });
       console.log("API Response:", result);
-      const tickets = (result.data || []).map((ticket: any) => ({
-        airline: ticket.airlineName || ticket.airline || "",
-        price: ticket.price,
-        departure: ticket.departureTime,
-        arrival: ticket.arrivalTime,
-        duration: ticket.duration,
-        stops: ticket.stops,
-      }));
+      const tickets = (result.data || []).map((ticket: any) => {
+        console.log("Processing ticket:", ticket);
+        console.log("Ticket price:", ticket.price);
+        console.log("Ticket cost:", ticket.cost);
+        return {
+          airline: ticket.airlineName || ticket.airline || "",
+          price: ticket.price || ticket.cost || 0,
+          departure: ticket.departureTime,
+          arrival: ticket.arrivalTime,
+          duration: ticket.duration,
+          stops: ticket.stops,
+        };
+      });
       console.log("Mapped tickets:", tickets);
       setTickets(tickets);
       setTotalPages(result.pagination?.totalPages || 1);
@@ -61,14 +68,19 @@ function App() {
         ...lastSearchParams,
         page: newPage,
       });
-      const tickets = (result.data || []).map((ticket: any) => ({
-        airline: ticket.airlineName || ticket.airline || "",
-        price: ticket.price,
-        departure: ticket.departureTime,
-        arrival: ticket.arrivalTime,
-        duration: ticket.duration,
-        stops: ticket.stops,
-      }));
+      const tickets = (result.data || []).map((ticket: any) => {
+        console.log("Processing ticket (page change):", ticket);
+        console.log("Ticket price (page change):", ticket.price);
+        console.log("Ticket cost (page change):", ticket.cost);
+        return {
+          airline: ticket.airlineName || ticket.airline || "",
+          price: ticket.price || ticket.cost || 0,
+          departure: ticket.departureTime,
+          arrival: ticket.arrivalTime,
+          duration: ticket.duration,
+          stops: ticket.stops,
+        };
+      });
       setTickets(tickets);
       setTotalPages(result.pagination?.totalPages || 1);
     } catch (error) {
@@ -98,6 +110,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage onSearch={handleSearch} />} />
+      <Route path="/stripe-demo" element={<StripeDemo />} />
       <Route
         path="/results"
         element={
@@ -126,6 +139,7 @@ function App() {
           )
         }
       />
+      <Route path="/payment-success" element={<PaymentSuccessPage />} />
       <Route
         path="/confirmation"
         element={

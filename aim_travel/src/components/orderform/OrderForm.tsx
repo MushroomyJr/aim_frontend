@@ -8,6 +8,8 @@ import {
   CardContent,
   Alert,
   CircularProgress,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -15,12 +17,15 @@ import PaymentIcon from "@mui/icons-material/Payment";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
 import PersonIcon from "@mui/icons-material/Person";
 import FlightIcon from "@mui/icons-material/Flight";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
 import {
   type OrderRequest,
   type FlightTicketRequest,
   createOrder,
   createFlightTicket,
 } from "../../services/orderService";
+import StripeCheckout from "../stripecheckout";
+import PassengerForm from "./PassengerForm";
 
 interface OrderFormProps {
   ticket: any;
@@ -36,144 +41,95 @@ const OrderForm: React.FC<OrderFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"regular" | "stripe">(
+    "stripe"
+  );
+  const [paymentSession, setPaymentSession] = useState<any>(null);
+  const [showPassengerForm, setShowPassengerForm] = useState(true);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+  const handlePaymentSessionCreated = (session: any) => {
+    console.log("Payment session created:", session);
+    setPaymentSession(session);
+    setShowPassengerForm(false);
+  };
 
-    try {
-      // Step 1: Create flight ticket
-      const flightTicketData: FlightTicketRequest = {
-        origin: ticket.origin || "JFK",
-        destination: ticket.destination || "LAX",
-        roundTrip: ticket.roundTrip || false,
-        departureTime: ticket.departure || new Date().toISOString(),
-        arrivalTime: ticket.arrival || new Date().toISOString(),
-        airline: ticket.airline || "American Airlines",
-        cost: ticket.price || 450.0,
-        stops: ticket.stops || 0,
-        baggage: "1 checked bag",
-        travelClass: "Economy",
-      };
+  const handleRedirectToPayment = () => {
+    if (paymentSession?.paymentSessionUrl) {
+      // Store session ID for later use
+      localStorage.setItem("stripeSessionId", paymentSession.paymentSessionId);
 
-      const flightTicket = await createFlightTicket(
-        flightTicketData,
-        userEmail
-      );
-      console.log("Flight ticket created:", flightTicket);
-
-      // Step 2: Create order with the flight ticket ID
-      const itineraryNumber = `ITN${Date.now()}`;
-
-      const orderData: OrderRequest = {
-        userEmail: userEmail,
-        flightTicketIds: [flightTicket.id],
-        itineraryNumber: itineraryNumber,
-      };
-
-      const response = await createOrder(orderData);
-      console.log("Order created:", response);
-      onOrderComplete(response.orderId.toString());
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to create order. Please try again."
-      );
-    } finally {
-      setLoading(false);
+      // Redirect to Stripe checkout
+      window.location.href = paymentSession.paymentSessionUrl;
     }
   };
 
-  return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+  // Show passenger form first
+  if (showPassengerForm) {
+    return (
+      <PassengerForm
+        ticket={ticket}
+        onPaymentSessionCreated={handlePaymentSessionCreated}
+        onBack={onBack}
+      />
+    );
+  }
+
+  // Show payment confirmation
+  if (paymentSession) {
+    return (
       <Box sx={{ maxWidth: 600, margin: "auto", padding: 3 }}>
         <Card sx={{ borderRadius: 2 }}>
           <CardContent>
             <Typography variant="h4" align="center" gutterBottom>
-              Complete Your Order
+              Payment Confirmation
             </Typography>
 
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Flight Details
+                Order Details
               </Typography>
               <Card variant="outlined" sx={{ p: 2, mb: 2 }}>
                 <Typography variant="body1">
-                  <strong>Airline:</strong> {ticket.airline}
+                  <strong>Order Number:</strong> {paymentSession.orderNumber}
                 </Typography>
                 <Typography variant="body1">
-                  <strong>Price:</strong> ${ticket.price}
+                  <strong>Passenger:</strong> {paymentSession.passengerName}
                 </Typography>
                 <Typography variant="body1">
-                  <strong>Departure:</strong> {ticket.departure}
+                  <strong>Flight:</strong> {paymentSession.origin} →{" "}
+                  {paymentSession.destination}
                 </Typography>
                 <Typography variant="body1">
-                  <strong>Arrival:</strong> {ticket.arrival}
+                  <strong>Airline:</strong> {paymentSession.airline}
                 </Typography>
                 <Typography variant="body1">
-                  <strong>Duration:</strong> {ticket.duration}
+                  <strong>Amount:</strong> ${paymentSession.cost}
                 </Typography>
               </Card>
             </Box>
 
-            <form onSubmit={handleSubmit}>
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  Contact Information
-                </Typography>
-
-                <TextField
-                  fullWidth
-                  label="Email Address"
-                  type="email"
-                  value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
-                  required
-                  helperText="We'll send your booking confirmation to this email"
-                  sx={{ mb: 2 }}
-                />
-
-                {error && (
-                  <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
-                  </Alert>
-                )}
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 2,
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Button
-                    variant="outlined"
-                    onClick={onBack}
-                    disabled={loading}
-                  >
-                    Back to Results
-                  </Button>
-
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    disabled={loading || !userEmail}
-                    startIcon={
-                      loading ? <CircularProgress size={20} /> : <PaymentIcon />
-                    }
-                  >
-                    {loading ? "Creating Order..." : "Complete Order"}
-                  </Button>
-                </Box>
-              </Box>
-            </form>
+            <Box sx={{ textAlign: "center" }}>
+              <Typography variant="body1" gutterBottom>
+                Ready to proceed to secure payment?
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                onClick={handleRedirectToPayment}
+                startIcon={<PaymentIcon />}
+                sx={{ mt: 2 }}
+              >
+                Proceed to Payment
+              </Button>
+            </Box>
           </CardContent>
         </Card>
       </Box>
-    </LocalizationProvider>
-  );
+    );
+  }
+
+  return null; // This should never be reached
 };
 
 export default OrderForm;
