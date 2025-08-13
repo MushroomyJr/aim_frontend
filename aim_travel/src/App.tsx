@@ -19,6 +19,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderDetails, setOrderDetails] = useState<any>(null);
   const navigate = useNavigate();
 
   const handleSearch = async (params: any) => {
@@ -40,6 +41,11 @@ function App() {
           arrival: ticket.arrivalTime,
           duration: ticket.duration,
           stops: ticket.stops,
+          origin: ticket.origin,
+          destination: ticket.destination,
+          roundTrip: ticket.roundTrip,
+          baggage: ticket.baggage,
+          travelClass: ticket.travelClass,
         };
       });
       console.log("Mapped tickets:", tickets);
@@ -79,6 +85,11 @@ function App() {
           arrival: ticket.arrivalTime,
           duration: ticket.duration,
           stops: ticket.stops,
+          origin: ticket.origin,
+          destination: ticket.destination,
+          roundTrip: ticket.roundTrip,
+          baggage: ticket.baggage,
+          travelClass: ticket.travelClass,
         };
       });
       setTickets(tickets);
@@ -96,14 +107,18 @@ function App() {
     navigate("/order");
   };
 
-  const handleOrderComplete = (newOrderId: string) => {
+  const handleOrderComplete = (newOrderId: string, details?: any) => {
     setOrderId(newOrderId);
+    setOrderDetails(details);
     navigate("/confirmation");
   };
 
   const handleBackToSearch = () => {
     setSelectedTicket(null);
     setOrderId(null);
+    setOrderDetails(null);
+    // Clear stored session ID
+    localStorage.removeItem("stripeSessionId");
     navigate("/");
   };
 
@@ -146,6 +161,7 @@ function App() {
           orderId ? (
             <OrderConfirmationPage
               orderId={orderId}
+              orderDetails={orderDetails}
               onBackToSearch={handleBackToSearch}
             />
           ) : (

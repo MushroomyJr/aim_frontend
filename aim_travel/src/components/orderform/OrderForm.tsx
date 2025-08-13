@@ -29,7 +29,7 @@ import PassengerForm from "./PassengerForm";
 
 interface OrderFormProps {
   ticket: any;
-  onOrderComplete: (orderId: string) => void;
+  onOrderComplete: (orderId: string, details?: any) => void;
   onBack: () => void;
 }
 
@@ -51,6 +51,19 @@ const OrderForm: React.FC<OrderFormProps> = ({
     console.log("Payment session created:", session);
     setPaymentSession(session);
     setShowPassengerForm(false);
+  };
+
+  const handlePaymentSuccess = () => {
+    // When payment is successful, pass the order details to the parent
+    if (paymentSession) {
+      onOrderComplete(paymentSession.orderNumber, {
+        airline: paymentSession.airline,
+        origin: paymentSession.origin,
+        destination: paymentSession.destination,
+        cost: paymentSession.cost,
+        roundTrip: ticket.roundTrip || false,
+      });
+    }
   };
 
   const handleRedirectToPayment = () => {

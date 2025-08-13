@@ -74,8 +74,8 @@ const PassengerForm: React.FC<PassengerFormProps> = ({
         passenger: passengerName.trim(),
         dob: dobString,
         email: email.trim() || null, // Optional for guest users
-        origin: ticket.origin || "JFK",
-        destination: ticket.destination || "LAX",
+        origin: ticket.origin,
+        destination: ticket.destination,
         roundTrip: ticket.roundTrip || false,
         departureTime: formatDateTime(ticket.departure),
         arrivalTime: formatDateTime(ticket.arrival),
@@ -85,11 +85,11 @@ const PassengerForm: React.FC<PassengerFormProps> = ({
         returnArrivalTime: ticket.returnArrival
           ? formatDateTime(ticket.returnArrival)
           : null,
-        airline: ticket.airline || "American Airlines",
-        cost: ticket.price || ticket.cost || 450.0,
+        airline: ticket.airline,
+        cost: ticket.price || ticket.cost || 0,
         stops: ticket.stops || 0,
-        baggage: "1 checked bag",
-        travelClass: "Economy",
+        baggage: ticket.baggage || "1 checked bag",
+        travelClass: ticket.travelClass || "Economy",
       };
 
       console.log("Creating ticket with payment session:", ticketData);
@@ -127,8 +127,7 @@ const PassengerForm: React.FC<PassengerFormProps> = ({
                   <strong>Price:</strong> ${ticket.price || ticket.cost}
                 </Typography>
                 <Typography variant="body1">
-                  <strong>Route:</strong> {ticket.origin || "JFK"} →{" "}
-                  {ticket.destination || "LAX"}
+                  <strong>Route:</strong> {ticket.origin} → {ticket.destination}
                 </Typography>
                 <Typography variant="body1">
                   <strong>Type:</strong>{" "}
